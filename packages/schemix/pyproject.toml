@@ -1,0 +1,14 @@
+[project]
+name = "schemix"
+version = "0.1.0a0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ethan Coward", email = "ethan@ethancoward.dev" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
