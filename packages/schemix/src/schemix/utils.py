@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeGuard
 
 if TYPE_CHECKING:
-    from schemix.columns import ColumnType
+    from schemix.base import ColumnType
 
 
 def _is_column_type(obj: Any) -> TypeGuard[ColumnType]:

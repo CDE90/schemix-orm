@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Never
 
 from schemix.dialects import Dialect
-from schemix.exceptions import ConnectionError
+from schemix.exceptions import SchemixConnectionError
 
 
 # Trick the type checker into thinking that these imports are never None
@@ -45,9 +45,7 @@ class AsyncConnection(ABC):
         ...
 
     @abstractmethod
-    async def executemany(
-        self, query: str, params: Sequence[Sequence[Any]]
-    ) -> list[dict[str, Any]] | None:
+    async def executemany(self, query: str, params: Sequence[Sequence[Any]]) -> None:
         """Execute a query and return the results."""
         ...
 
@@ -99,18 +97,16 @@ class SQLiteConnection(AsyncConnection):
             await cursor.close()
             return results
         except Exception as e:
-            raise ConnectionError(f"Failed to execute query: {e}") from e
+            raise SchemixConnectionError(f"Failed to execute query: {e}") from e
 
-    async def executemany(
-        self, query: str, params: Sequence[Sequence[Any]]
-    ) -> list[dict[str, Any]] | None:
+    async def executemany(self, query: str, params: Sequence[Sequence[Any]]) -> None:
         """Execute a batch query without returning results."""
         try:
             cursor = await self._conn.executemany(query, params)
             await cursor.close()
             return None
         except Exception as e:
-            raise ConnectionError(f"Failed to execute many: {e}") from e
+            raise SchemixConnectionError(f"Failed to execute many: {e}") from e
 
 
 class PostgreSQLConnection(AsyncConnection):
@@ -141,11 +137,9 @@ class PostgreSQLConnection(AsyncConnection):
             results = [dict(row) for row in rows]
             return results
         except Exception as e:
-            raise ConnectionError(f"Failed to execute query: {e}") from e
+            raise SchemixConnectionError(f"Failed to execute query: {e}") from e
 
-    async def executemany(
-        self, query: str, params: Sequence[Sequence[Any]]
-    ) -> list[dict[str, Any]] | None:
+    async def executemany(self, query: str, params: Sequence[Sequence[Any]]) -> None:
         """Execute a query and return the results."""
         try:
             # Handle both Connection and Pool
@@ -156,4 +150,4 @@ class PostgreSQLConnection(AsyncConnection):
                 await self._conn.executemany(query, params)
             return None
         except Exception as e:
-            raise ConnectionError(f"Failed to execute many: {e}") from e
+            raise SchemixConnectionError(f"Failed to execute many: {e}") from e

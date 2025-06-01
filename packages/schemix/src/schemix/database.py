@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TypeVar
 
-from schemix.columns import ColumnType
+from schemix.base import ColumnType
 from schemix.connection import AsyncConnection
 from schemix.query import SQLExpression
 from schemix.query.select import SelectBuilder

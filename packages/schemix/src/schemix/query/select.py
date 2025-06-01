@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
 
-from schemix.columns import ColumnType
+from schemix.base import ColumnType
 from schemix.dialects import ParameterCollector
 from schemix.exceptions import QueryError
 from schemix.query import SQLExpression

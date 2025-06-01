@@ -9,7 +9,7 @@ class SchemixError(Exception):
     pass
 
 
-class ConnectionError(SchemixError):
+class SchemixConnectionError(SchemixError):
     """Raised when there are database connection issues."""
 
     pass

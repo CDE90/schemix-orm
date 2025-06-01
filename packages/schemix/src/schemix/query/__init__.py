@@ -68,12 +68,12 @@ class BinaryExpression(SQLExpression):
     def to_sql(self, dialect: Dialect, collector: ParameterCollector) -> str:
         left_sql = self._operand_to_sql(self.left, dialect, collector)
         right_sql = self._operand_to_sql(self.right, dialect, collector)
-        
+
         # Handle dialect-specific operators
         if self.operator == "^" and dialect == Dialect.SQLITE:
             # SQLite uses power(x, y) function instead of ^ operator
             return f"power({left_sql}, {right_sql})"
-        
+
         return f"({left_sql} {self.operator} {right_sql})"
 
 

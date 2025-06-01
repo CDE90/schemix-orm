@@ -3,11 +3,11 @@ import json
 
 import aiosqlite
 
-from schemix.columns import JSON, Boolean, Integer, Text, Varchar
 from schemix.database import Database
 from schemix.dialects import Dialect
 from schemix.helpers import create_sqlite_connection
 from schemix.schema import generate_create_table_sql
+from schemix.sqlite import JSON, Integer, Text
 from schemix.table import BaseTable
 
 
@@ -17,10 +17,10 @@ class Users(BaseTable):
     __tablename__ = "users"
 
     id = Integer("id").primary_key()
-    name = Varchar("name", length=100).not_null()
-    email = Varchar("email", length=100).not_null().unique()
+    name = Text("name").not_null()
+    email = Text("email").not_null().unique()
     age = Integer("age").not_null()
-    is_active = Boolean("is_active").default(True)
+    is_active = Integer("is_active").default(1)  # Boolean as INTEGER in SQLite
     metadata = JSON("metadata").nullable()
     bio = Text("bio").nullable()
 
@@ -31,7 +31,7 @@ class Posts(BaseTable):
     __tablename__ = "posts"
 
     id = Integer("id").primary_key()
-    title = Varchar("title", length=255).not_null()
+    title = Text("title").not_null()
     content = Text("content").not_null()
     author_id = Integer("author_id").references(Users.id, on_delete="cascade")
 

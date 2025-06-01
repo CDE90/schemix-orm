@@ -1,26 +1,5 @@
 """Schemix ORM - Type-safe ORM for Python."""
 
-# Core table and column types
-from schemix.columns import (
-    JSON,
-    JSONB,
-    BigInt,
-    BigSerial,
-    Boolean,
-    Char,
-    ColumnType,
-    Date,
-    Decimal,
-    Integer,
-    Numeric,
-    Serial,
-    SmallInt,
-    SmallSerial,
-    Text,
-    Time,
-    Timestamp,
-    Varchar,
-)
 from schemix.connection import AsyncConnection, PostgreSQLConnection, SQLiteConnection
 
 # Database and connection
@@ -45,25 +24,6 @@ __all__ = [
     "SQLiteConnection",
     "PostgreSQLConnection",
     "Dialect",
-    # Column types
-    "ColumnType",
-    "Integer",
-    "SmallInt",
-    "BigInt",
-    "Serial",
-    "SmallSerial",
-    "BigSerial",
-    "Numeric",
-    "Decimal",
-    "Varchar",
-    "Text",
-    "Char",
-    "Boolean",
-    "Date",
-    "Time",
-    "Timestamp",
-    "JSON",
-    "JSONB",
     # Schema utilities
     "generate_create_table_sql",
     "generate_column_sql",

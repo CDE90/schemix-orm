@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 from schemix.dialects import Dialect
 
 if TYPE_CHECKING:
-    from schemix.columns import ColumnType
+    from schemix.base import ColumnType
     from schemix.table import BaseTable
 
 
 def generate_column_sql(column: ColumnType, dialect: Dialect) -> str:
     """Generate SQL column definition including constraints."""
-    parts = [f"{column.col_name} {column._get_sql_type(dialect)}"]
+    parts = [f"{column.col_name} {column.get_sql_type()}"]
 
     # Add constraints
     if column.is_primary_key:

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from schemix.utils import _is_column_type
 
 if TYPE_CHECKING:
-    from schemix.columns import ColumnType
+    from schemix.base import ColumnType
 
 
 class TableMeta(ABCMeta):
