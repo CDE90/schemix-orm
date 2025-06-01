@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import datetime
+import json
 from abc import ABC, abstractmethod
 from typing import Any, Literal, Self
 
@@ -17,6 +19,11 @@ __all__ = [
     "CountOperatorMixin",
     "MinMaxOperatorMixin",
     "NumericAggregateOperatorMixin",
+    "PassthroughSerializationMixin",
+    "JSONSerializationMixin",
+    "DateSerializationMixin",
+    "TimeSerializationMixin",
+    "TimestampSerializationMixin",
 ]
 
 
@@ -56,6 +63,16 @@ class ColumnType[T](ABC):
     @abstractmethod
     def get_sql_type(self) -> str:
         """Get the SQL type string for this column in the specific dialect."""
+        ...
+
+    @abstractmethod
+    def serialize(self, value: T | None) -> Any:
+        """Convert Python value to database format."""
+        ...
+
+    @abstractmethod
+    def deserialize(self, db_value: Any) -> T | None:
+        """Convert database value to Python type."""
         ...
 
     # Builder Methods
@@ -185,3 +202,81 @@ class NumericAggregateOperatorMixin:
 
     def sum(self):
         return FunctionExpression("SUM", self)
+
+
+# Serialization Mixins
+class PassthroughSerializationMixin:
+    """For types that don't need conversion (int, float, str, bool, bytes)."""
+
+    def serialize(self, value: Any | None) -> Any:
+        return value
+
+    def deserialize(self, db_value: Any) -> Any | None:
+        return db_value
+
+
+class JSONSerializationMixin:
+    """For JSON columns that need JSON encoding/decoding."""
+
+    def serialize(self, value: Any | None) -> str | None:
+        if value is None:
+            return None
+        return json.dumps(value)
+
+    def deserialize(self, db_value: Any) -> Any | None:
+        if db_value is None:
+            return None
+        if isinstance(db_value, str):
+            return json.loads(db_value)
+        return db_value  # Already parsed (PostgreSQL)
+
+
+class DateSerializationMixin:
+    """For date columns stored as TEXT."""
+
+    def serialize(self, value: datetime.date | None) -> str | None:
+        if value is None:
+            return None
+        return value.isoformat()
+
+    def deserialize(self, db_value: Any) -> datetime.date | None:
+        if db_value is None:
+            return None
+        if isinstance(db_value, str):
+            return datetime.date.fromisoformat(db_value)
+        # Already a date object
+        return db_value  # type: ignore[no-any-return]
+
+
+class TimeSerializationMixin:
+    """For time columns stored as TEXT."""
+
+    def serialize(self, value: datetime.time | None) -> str | None:
+        if value is None:
+            return None
+        return value.isoformat()
+
+    def deserialize(self, db_value: Any) -> datetime.time | None:
+        if db_value is None:
+            return None
+        if isinstance(db_value, str):
+            return datetime.time.fromisoformat(db_value)
+        # Already a time object
+        return db_value  # type: ignore[no-any-return]
+
+
+class TimestampSerializationMixin:
+    """For timestamp columns stored as TEXT."""
+
+    def serialize(self, value: datetime.datetime | None) -> str | None:
+        if value is None:
+            return None
+        return value.isoformat()
+
+    def deserialize(self, db_value: Any) -> datetime.datetime | None:
+        if db_value is None:
+            return None
+        if isinstance(db_value, str):
+            return datetime.datetime.fromisoformat(db_value)
+        # Already a datetime object
+        return db_value  # type: ignore[no-any-return]

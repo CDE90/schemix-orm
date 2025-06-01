@@ -12,6 +12,7 @@ from schemix.base import (
     NumericAggregateOperatorMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
+    PassthroughSerializationMixin,
     StringOperatorMixin,
 )
 from schemix.query import BinaryExpression
@@ -48,6 +49,7 @@ class PostgreSQLStringOperatorMixin(StringOperatorMixin):
 
 
 class Integer(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -60,6 +62,7 @@ class Integer(
 
 
 class SmallInt(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -72,6 +75,7 @@ class SmallInt(
 
 
 class BigInt(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -99,6 +103,7 @@ class BigSerial(BigInt):
 
 
 class Numeric(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -123,6 +128,7 @@ class Decimal(Numeric):
 
 
 class Varchar(
+    PassthroughSerializationMixin,
     PostgreSQLStringOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -138,6 +144,7 @@ class Varchar(
 
 
 class Text(
+    PassthroughSerializationMixin,
     PostgreSQLStringOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -149,6 +156,7 @@ class Text(
 
 
 class Char(
+    PassthroughSerializationMixin,
     PostgreSQLStringOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -163,20 +171,28 @@ class Char(
         return f"CHAR({length})"
 
 
-class Boolean(CountOperatorMixin, ColumnType[bool]):
+class Boolean(PassthroughSerializationMixin, CountOperatorMixin, ColumnType[bool]):
     def get_sql_type(self) -> str:
         return "BOOLEAN"
 
 
 class Date(
-    OrderedOperatorMixin, CountOperatorMixin, MinMaxOperatorMixin, ColumnType[datetime.date]
+    PassthroughSerializationMixin,
+    OrderedOperatorMixin,
+    CountOperatorMixin,
+    MinMaxOperatorMixin,
+    ColumnType[datetime.date],
 ):
     def get_sql_type(self) -> str:
         return "DATE"
 
 
 class Time(
-    OrderedOperatorMixin, CountOperatorMixin, MinMaxOperatorMixin, ColumnType[datetime.time]
+    PassthroughSerializationMixin,
+    OrderedOperatorMixin,
+    CountOperatorMixin,
+    MinMaxOperatorMixin,
+    ColumnType[datetime.time],
 ):
     def __init__(self, col_name: str, *, with_timezone: bool = False) -> None:
         super().__init__(col_name, with_timezone=with_timezone)
@@ -187,6 +203,7 @@ class Time(
 
 
 class Timestamp(
+    PassthroughSerializationMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -200,7 +217,9 @@ class Timestamp(
         return "TIMESTAMP WITH TIME ZONE" if with_timezone else "TIMESTAMP"
 
 
-class JSON(CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]):
+class JSON(
+    PassthroughSerializationMixin, CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]
+):
     def get_sql_type(self) -> str:
         return "JSON"
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Never
@@ -59,19 +58,6 @@ class SQLiteConnection(AsyncConnection):
         assert aiosqlite is not None, "aiosqlite is not installed"
         self._conn = connection
 
-    def _deserialize_json_fields(self, row_dict: dict[str, Any]) -> dict[str, Any]:
-        """Deserialize JSON fields in SQLite results."""
-        for key, value in row_dict.items():
-            if isinstance(value, str):
-                try:
-                    # Try to parse as JSON if it looks like JSON
-                    if value.strip().startswith(("{", "[")):
-                        row_dict[key] = json.loads(value)
-                except (json.JSONDecodeError, ValueError):
-                    # If it fails, keep as string
-                    pass
-        return row_dict
-
     async def execute(
         self, query: str, params: Sequence[Any] | None = None
     ) -> list[dict[str, Any]] | None:
@@ -90,8 +76,6 @@ class SQLiteConnection(AsyncConnection):
             results = []
             for row in rows:
                 row_dict = dict(zip(column_names, row, strict=False))
-                # Deserialize JSON fields for SQLite
-                row_dict = self._deserialize_json_fields(row_dict)
                 results.append(row_dict)
 
             await cursor.close()

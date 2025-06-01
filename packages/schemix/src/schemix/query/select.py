@@ -206,11 +206,31 @@ class SelectBase[CType]:
 
         return sql, tuple(collector.parameters)
 
+    def _deserialize_row(self, row: dict[str, Any]) -> CType:
+        """Deserialize a database row using column-level deserialization."""
+        deserialized_row = {}
+        for alias, column in self.columns.items():  # type: ignore[attr-defined]
+            if alias in row:
+                if isinstance(column, ColumnType):
+                    # Use column's deserialize method
+                    deserialized_row[alias] = column.deserialize(row[alias])
+                else:
+                    # For expressions, keep as-is
+                    deserialized_row[alias] = row[alias]
+            else:
+                deserialized_row[alias] = None
+        return deserialized_row  # type: ignore[return-value]
+
     async def execute(self) -> list[CType]:
         """Execute the query and return the results."""
         try:
             sql, params = self.get_sql()
-            results = await self.database.connection.execute(sql, params)
-            return results or []  # type: ignore[return-value]
+            raw_results = await self.database.connection.execute(sql, params)
+            if not raw_results:
+                return []
+
+            # Deserialize each row using column-level deserialization
+            results = [self._deserialize_row(row) for row in raw_results]
+            return results  # type: ignore[return-value]
         except Exception as e:
             raise QueryError(f"Failed to execute select query: {e}") from e

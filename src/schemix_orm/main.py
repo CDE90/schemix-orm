@@ -33,7 +33,7 @@ class Posts(BaseTable):
     id = Integer("id").primary_key()
     title = Text("title").not_null()
     content = Text("content").not_null()
-    author_id = Integer("author_id").references(Users.id, on_delete="cascade")
+    author_id = Integer("author_id").references(Users.id, on_delete="CASCADE")
 
 
 async def create_tables(sqlite_conn: aiosqlite.Connection) -> None:

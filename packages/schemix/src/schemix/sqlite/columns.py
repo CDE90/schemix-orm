@@ -8,11 +8,16 @@ from typing import Any
 from schemix.base import (
     ColumnType,
     CountOperatorMixin,
+    DateSerializationMixin,
+    JSONSerializationMixin,
     MinMaxOperatorMixin,
     NumericAggregateOperatorMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
+    PassthroughSerializationMixin,
     StringOperatorMixin,
+    TimeSerializationMixin,
+    TimestampSerializationMixin,
 )
 
 __all__ = [
@@ -29,6 +34,7 @@ __all__ = [
 
 
 class Integer(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -41,6 +47,7 @@ class Integer(
 
 
 class Real(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -53,6 +60,7 @@ class Real(
 
 
 class Text(
+    PassthroughSerializationMixin,
     StringOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -63,12 +71,13 @@ class Text(
         return "TEXT"
 
 
-class Blob(CountOperatorMixin, ColumnType[bytes]):
+class Blob(PassthroughSerializationMixin, CountOperatorMixin, ColumnType[bytes]):
     def get_sql_type(self) -> str:
         return "BLOB"
 
 
 class Numeric(
+    PassthroughSerializationMixin,
     NumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
@@ -86,20 +95,29 @@ class Numeric(
 
 
 class Date(
-    OrderedOperatorMixin, CountOperatorMixin, MinMaxOperatorMixin, ColumnType[datetime.date]
+    DateSerializationMixin,
+    OrderedOperatorMixin,
+    CountOperatorMixin,
+    MinMaxOperatorMixin,
+    ColumnType[datetime.date],
 ):
     def get_sql_type(self) -> str:
         return "TEXT"  # SQLite stores dates as TEXT
 
 
 class Time(
-    OrderedOperatorMixin, CountOperatorMixin, MinMaxOperatorMixin, ColumnType[datetime.time]
+    TimeSerializationMixin,
+    OrderedOperatorMixin,
+    CountOperatorMixin,
+    MinMaxOperatorMixin,
+    ColumnType[datetime.time],
 ):
     def get_sql_type(self) -> str:
         return "TEXT"  # SQLite stores times as TEXT
 
 
 class Timestamp(
+    TimestampSerializationMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -109,6 +127,6 @@ class Timestamp(
         return "TEXT"  # SQLite stores timestamps as TEXT
 
 
-class JSON(CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]):
+class JSON(JSONSerializationMixin, CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]):
     def get_sql_type(self) -> str:
         return "TEXT"  # SQLite stores JSON as TEXT
