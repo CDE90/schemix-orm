@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
 
 from schemix.columns import ColumnType
 from schemix.dialects import ParameterCollector
+from schemix.exceptions import QueryError
 from schemix.query import SQLExpression
 from schemix.table import BaseTable
 
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from schemix.database import Database
 
 
-CType = TypeVar("CType", bound=Mapping[str, ColumnType])
+CType = TypeVar("CType", bound=Mapping[str, ColumnType | SQLExpression])
 
 
 class SelectBuilder[CType]:
@@ -124,8 +125,8 @@ class SelectBase[CType]:
         self.config.having = expression
         return self
 
-    def group_by(self, columns: list[ColumnType]) -> Self:
-        self.config.group_by = columns
+    def group_by(self, *columns: ColumnType) -> Self:
+        self.config.group_by = list(columns)
         return self
 
     def order_by(self, *args: SQLExpression | ColumnType) -> Self:
@@ -150,11 +151,14 @@ class SelectBase[CType]:
         # TODO: check this code
 
         # Build column list with qualified names
-        column_names = ", ".join(
-            [f"{column._get_qualified_name()} AS {alias}" for alias, column in self.columns.items()]  # type: ignore[attr-defined]
-        )
+        select_columns = []
+        for alias, column in self.columns.items():  # type: ignore[attr-defined]
+            if isinstance(column, ColumnType):
+                select_columns.append(f"{column._get_qualified_name()} AS {alias}")
+            else:
+                select_columns.append(column.to_sql(collector) + f" AS {alias}")
 
-        sql = f"SELECT {column_names} FROM {table_name}"
+        sql = f"SELECT {', '.join(select_columns)} FROM {table_name}"
 
         # Add JOIN clauses
         if self.config.joins is not None:
@@ -206,5 +210,9 @@ class SelectBase[CType]:
 
     async def execute(self) -> list[CType]:
         """Execute the query and return the results."""
-        sql, params = self.get_sql()
-        return await self.database.connection.execute(sql, params)  # type: ignore[return-value]
+        try:
+            sql, params = self.get_sql()
+            results = await self.database.connection.execute(sql, params)
+            return results or []  # type: ignore[return-value]
+        except Exception as e:
+            raise QueryError(f"Failed to execute select query: {e}") from e

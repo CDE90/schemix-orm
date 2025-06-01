@@ -8,6 +8,27 @@ from schemix.dialects import Dialect, DialectNotSupportedError
 from schemix.query import BinaryExpression, FunctionExpression
 from schemix.table import BaseTable
 
+__all__ = [
+    "ColumnType",
+    "Integer",
+    "SmallInt",
+    "BigInt",
+    "Serial",
+    "SmallSerial",
+    "BigSerial",
+    "Numeric",
+    "Decimal",
+    "Varchar",
+    "Text",
+    "Char",
+    "Boolean",
+    "Date",
+    "Time",
+    "Timestamp",
+    "JSON",
+    "JSONB",
+]
+
 
 class ColumnType[T](ABC):
     """An abstract class representing a column type."""

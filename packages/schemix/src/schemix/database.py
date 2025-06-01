@@ -5,10 +5,11 @@ from typing import TypeVar
 
 from schemix.columns import ColumnType
 from schemix.connection import AsyncConnection
+from schemix.query import SQLExpression
 from schemix.query.select import SelectBuilder
 from schemix.table import BaseTable
 
-CType = TypeVar("CType", bound=Mapping[str, ColumnType])
+CType = TypeVar("CType", bound=Mapping[str, ColumnType | SQLExpression])
 
 
 class Database:
@@ -18,11 +19,13 @@ class Database:
     Supports type-safe queries through mypy plugin integration.
 
     Args:
-        connection: Database connection instance (SQLiteConnection or PostgreSQLConnection)
+        connection: Pre-configured AsyncConnection instance (SQLiteConnection or PostgreSQLConnection)
         tables: List of table classes to include in the database
     """
 
-    def __init__(self, connection: AsyncConnection, tables: list[type[BaseTable]]) -> None:
+    def __init__(
+        self, connection: AsyncConnection, tables: list[type[BaseTable]]
+    ) -> None:
         self.connection = connection
         self.tables = tables
 
