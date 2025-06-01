@@ -5,7 +5,9 @@ import aiosqlite
 
 from schemix.columns import JSON, Boolean, Integer, Text, Varchar
 from schemix.database import Database
+from schemix.dialects import Dialect
 from schemix.helpers import create_sqlite_connection
+from schemix.schema import generate_create_table_sql
 from schemix.table import BaseTable
 
 
@@ -23,23 +25,40 @@ class Users(BaseTable):
     bio = Text("bio").nullable()
 
 
-async def create_tables(sqlite_conn: aiosqlite.Connection) -> None:
-    """Create tables in the database."""
+class Posts(BaseTable):
+    """Example table class for Posts with foreign key to Users."""
 
-    # For now, we manually create the table.
-    await sqlite_conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(100) NOT NULL UNIQUE,
-            age INTEGER NOT NULL,
-            is_active BOOLEAN DEFAULT TRUE,
-            metadata JSON,
-            bio TEXT
-        );
-        """
-    )
+    __tablename__ = "posts"
+
+    id = Integer("id").primary_key()
+    title = Varchar("title", length=255).not_null()
+    content = Text("content").not_null()
+    author_id = Integer("author_id").references(Users.id, on_delete="cascade")
+
+
+async def create_tables(sqlite_conn: aiosqlite.Connection) -> None:
+    """Create tables in the database using schema generation."""
+
+    # Generate and execute Users table creation
+    users_sql = generate_create_table_sql(Users, Dialect.SQLITE)
+    print("Generated Users table SQL:")
+    print(users_sql)
+    print()
+
+    # Replace CREATE TABLE with CREATE TABLE IF NOT EXISTS for safety
+    users_sql = users_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+    await sqlite_conn.execute(users_sql)
+
+    # Generate and execute Posts table creation
+    posts_sql = generate_create_table_sql(Posts, Dialect.SQLITE)
+    print("Generated Posts table SQL:")
+    print(posts_sql)
+    print()
+
+    # Replace CREATE TABLE with CREATE TABLE IF NOT EXISTS for safety
+    posts_sql = posts_sql.replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS")
+    await sqlite_conn.execute(posts_sql)
+
     await sqlite_conn.commit()
 
 
@@ -79,6 +98,21 @@ async def seed_data(sqlite_conn: aiosqlite.Connection) -> None:
             ),
         ],
     )
+
+    # Seed posts data
+    await sqlite_conn.executemany(
+        """
+        INSERT INTO posts (title, content, author_id)
+        VALUES (?, ?, ?);
+        """,
+        [
+            ("My First Post", "This is Alice's first blog post about reading.", 1),
+            ("Football Season", "Bob writes about the upcoming football season.", 2),
+            ("Art Exhibition", "Diana shares her thoughts on the local art exhibition.", 4),
+            ("Book Review", "Alice reviews her latest favorite novel.", 1),
+        ],
+    )
+
     await sqlite_conn.commit()
 
 
@@ -92,7 +126,7 @@ async def main() -> None:
     # await sqlite_conn.commit()
     # connection = SQLiteConnection(sqlite_conn)
 
-    db = Database(connection, [Users])
+    db = Database(connection, [Users, Posts])
 
     # For table creation, we still need the raw connection
     # This will be improved when we add schema generation
@@ -125,6 +159,26 @@ async def main() -> None:
 
     print("\nAggregation Results:")
     for row in agg_results:
+        print(row)
+
+    # Test JOIN operations
+    join_query = (
+        db.select(
+            {"user_name": Users.name, "post_title": Posts.title, "post_content": Posts.content}
+        )
+        .from_(Users)
+        .inner_join(Posts, Users.id == Posts.author_id)
+        .where(Users.age > 18)
+        .order_by(Users.name, Posts.title)
+    )
+
+    sql, params = join_query.get_sql()
+    print(f"Generated JOIN SQL: {sql}")
+    print(f"Parameters: {params}")
+
+    join_results = await join_query.execute()
+    print("\nJOIN Query Results:")
+    for row in join_results:
         print(row)
 
     await sqlite_conn.close()

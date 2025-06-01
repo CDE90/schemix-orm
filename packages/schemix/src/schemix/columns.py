@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from abc import ABC, abstractmethod
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 from schemix.dialects import Dialect, DialectNotSupportedError
 from schemix.query import BinaryExpression, FunctionExpression
@@ -30,6 +30,9 @@ __all__ = [
 ]
 
 
+OnDeleteUpdateAction = Literal["cascade", "restrict", "set null", "set default", "no action"]
+
+
 class ColumnType[T](ABC):
     """An abstract class representing a column type."""
 
@@ -42,6 +45,9 @@ class ColumnType[T](ABC):
     default_value: T | None = None
 
     _table_cls: type[BaseTable] | None = None
+    _references: ColumnType | None = None
+    _on_delete: str | None = None
+    _on_update: str | None = None
 
     def __init__(self, col_name: str, **kwargs: Any) -> None:
         self.col_name = col_name
@@ -84,6 +90,25 @@ class ColumnType[T](ABC):
     def default(self, value: T) -> Self:
         """Sets the default value for the column."""
         self.default_value = value
+        return self
+
+    def references(
+        self,
+        column: ColumnType,
+        *,
+        on_delete: OnDeleteUpdateAction | None = None,
+        on_update: OnDeleteUpdateAction | None = None,
+    ) -> Self:
+        """Sets this column as a foreign key referencing another column.
+
+        Args:
+            column: The column this foreign key references
+            on_delete: Action to take when referenced row is deleted
+            on_update: Action to take when referenced row is updated
+        """
+        self._references = column
+        self._on_delete = on_delete.upper() if on_delete else None
+        self._on_update = on_update.upper() if on_update else None
         return self
 
     # Comparison Operators

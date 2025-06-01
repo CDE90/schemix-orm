@@ -23,9 +23,7 @@ class Database:
         tables: List of table classes to include in the database
     """
 
-    def __init__(
-        self, connection: AsyncConnection, tables: list[type[BaseTable]]
-    ) -> None:
+    def __init__(self, connection: AsyncConnection, tables: list[type[BaseTable]]) -> None:
         self.connection = connection
         self.tables = tables
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Never
 
 from schemix.dialects import Dialect
@@ -67,7 +67,7 @@ class SQLiteConnection(AsyncConnection):
             if isinstance(value, str):
                 try:
                     # Try to parse as JSON if it looks like JSON
-                    if value.strip().startswith(('{', '[')):
+                    if value.strip().startswith(("{", "[")):
                         row_dict[key] = json.loads(value)
                 except (json.JSONDecodeError, ValueError):
                     # If it fails, keep as string
@@ -149,7 +149,7 @@ class PostgreSQLConnection(AsyncConnection):
                     rows = await conn.fetch(query, *params)
             else:
                 rows = await self._conn.fetch(query, *params)
-            
+
             # asyncpg returns Record objects, convert to dicts
             results = [dict(row) for row in rows]
             return results

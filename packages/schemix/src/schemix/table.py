@@ -111,5 +111,14 @@ class BaseTable(metaclass=TableMeta):
             cls._columns[col_name] for col_name in cls._columns if cls._columns[col_name].is_unique
         ]
 
+    @classmethod
+    def get_foreign_key_columns(cls) -> list[ColumnType]:
+        """Get the foreign key columns for the current table."""
+        return [
+            cls._columns[col_name]
+            for col_name in cls._columns
+            if cls._columns[col_name]._references is not None
+        ]
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(table='{self.get_table_name()}', columns={self._columns.keys()})"
