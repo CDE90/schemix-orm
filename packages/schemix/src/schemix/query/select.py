@@ -148,15 +148,13 @@ class SelectBase[CType]:
         dialect = self.database.connection.dialect
         collector = ParameterCollector(dialect)
 
-        # TODO: check this code
-
         # Build column list with qualified names
         select_columns = []
         for alias, column in self.columns.items():  # type: ignore[attr-defined]
             if isinstance(column, ColumnType):
                 select_columns.append(f"{column._get_qualified_name()} AS {alias}")
             else:
-                select_columns.append(column.to_sql(collector) + f" AS {alias}")
+                select_columns.append(column.to_sql(dialect, collector) + f" AS {alias}")
 
         sql = f"SELECT {', '.join(select_columns)} FROM {table_name}"
 
@@ -171,11 +169,11 @@ class SelectBase[CType]:
                 else:
                     sql += f" {join_type} JOIN {join_table_name}"
                     if join.on is not None:
-                        sql += f" ON {join.on.to_sql(collector)}"
+                        sql += f" ON {join.on.to_sql(dialect, collector)}"
 
         # Add WHERE clause
         if self.config.where is not None:
-            sql += f" WHERE {self.config.where.to_sql(collector)}"
+            sql += f" WHERE {self.config.where.to_sql(dialect, collector)}"
 
         # Add GROUP BY clause
         if self.config.group_by is not None:
@@ -186,7 +184,7 @@ class SelectBase[CType]:
 
         # Add HAVING clause
         if self.config.having is not None:
-            sql += f" HAVING {self.config.having.to_sql(collector)}"
+            sql += f" HAVING {self.config.having.to_sql(dialect, collector)}"
 
         # Add ORDER BY clause
         if self.config.order_by is not None:
@@ -195,7 +193,7 @@ class SelectBase[CType]:
                 if isinstance(expr, ColumnType):
                     order_by_clauses.append(expr._get_qualified_name())
                 else:
-                    order_by_clauses.append(expr.to_sql(collector))
+                    order_by_clauses.append(expr.to_sql(dialect, collector))
             sql += f" ORDER BY {', '.join(order_by_clauses)}"
 
         # Add LIMIT clause

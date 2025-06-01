@@ -104,24 +104,11 @@ class SQLiteConnection(AsyncConnection):
     async def executemany(
         self, query: str, params: Sequence[Sequence[Any]]
     ) -> list[dict[str, Any]] | None:
-        """Execute a query and return the results."""
+        """Execute a batch query without returning results."""
         try:
             cursor = await self._conn.executemany(query, params)
-            rows = await cursor.fetchall()
-
-            # Get column names from cursor description
-            column_names = [desc[0] for desc in cursor.description] if cursor.description else []
-
-            # Convert rows to a list of dictionaries
-            results = []
-            for row in rows:
-                row_dict = dict(zip(column_names, row, strict=False))
-                # Deserialize JSON fields for SQLite
-                row_dict = self._deserialize_json_fields(row_dict)
-                results.append(row_dict)
-
             await cursor.close()
-            return results
+            return None
         except Exception as e:
             raise ConnectionError(f"Failed to execute many: {e}") from e
 

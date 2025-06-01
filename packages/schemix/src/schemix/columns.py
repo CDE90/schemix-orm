@@ -184,7 +184,7 @@ class CountOperatorMixin:
         return FunctionExpression("COUNT", self)
 
     def count_distinct(self):
-        return FunctionExpression("COUNT DISTINCT", self)
+        return FunctionExpression("COUNT", self, modifier="DISTINCT")
 
 
 class MinMaxOperatorMixin:
