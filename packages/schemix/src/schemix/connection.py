@@ -130,9 +130,6 @@ class SQLiteConnection(AsyncConnection):
         if self._conn is None:
             raise RuntimeError("Connection is not open")
 
-        if params is None:
-            params = []
-
         cursor = await self._conn.executemany(query, params)
         rows = await cursor.fetchall()
 
@@ -202,8 +199,6 @@ class PostgreSQLConnection(AsyncConnection):
         if self._conn is None:
             raise RuntimeError("Connection is not open")
 
-        params_tuples = [tuple(param) for param in params]
-        rows = await self._conn.fetchmany(query, params_tuples)
-        results = [dict(row) for row in rows]
+        await self._conn.executemany(query, params)
 
-        return results
+        return None

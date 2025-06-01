@@ -12,30 +12,31 @@ class SQLExpression(ABC):
     """An abstract class representing an SQL expression."""
 
     @abstractmethod
-    def to_sql(self, collector: ParameterCollector | None = None) -> str:
+    def to_sql(self, collector: ParameterCollector) -> str:
         """Convert the SQL expression to a string."""
         ...
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.to_sql()})"
+        sql_string = self.to_sql(ParameterCollector(Dialect.SQLITE))
+        return f"{self.__class__.__name__}({sql_string})"
 
-    def __and__(self, other: SQLExpression) -> SQLExpression:
+    def __and__(self, other: SQLExpression):
         """Implement the & operator."""
         return BinaryExpression(self, "AND", other)
 
-    def __or__(self, other: SQLExpression) -> SQLExpression:
+    def __or__(self, other: SQLExpression):
         """Implement the | operator."""
         return BinaryExpression(self, "OR", other)
 
-    def __invert__(self) -> SQLExpression:
+    def __invert__(self):
         """Implement the ~ operator."""
         return UnaryExpression("NOT", self)
 
-    def __eq__(self, other: SQLExpression) -> SQLExpression:  # type: ignore
+    def __eq__(self, other: SQLExpression):  # type: ignore
         """Implement the == operator."""
         return BinaryExpression(self, "=", other)
 
-    def __ne__(self, other: SQLExpression) -> SQLExpression:  # type: ignore
+    def __ne__(self, other: SQLExpression):  # type: ignore
         """Implement the != operator."""
         return BinaryExpression(self, "!=", other)
 
@@ -64,11 +65,7 @@ class BinaryExpression(SQLExpression):
         self.operator = operator
         self.right = right
 
-    def to_sql(self, collector: ParameterCollector | None = None) -> str:
-        # TODO: ensure that this handles correctly when collector is None (below is temporary)
-        if collector is None:
-            collector = ParameterCollector(Dialect.SQLITE)
-
+    def to_sql(self, collector: ParameterCollector) -> str:
         left_sql = self._operand_to_sql(self.left, collector)
         right_sql = self._operand_to_sql(self.right, collector)
         return f"({left_sql} {self.operator} {right_sql})"
@@ -81,11 +78,7 @@ class UnaryExpression(SQLExpression):
         self.operator = operator
         self.operand = operand
 
-    def to_sql(self, collector: ParameterCollector | None = None) -> str:
-        # TODO: ensure that this handles correctly when collector is None (below is temporary)
-        if collector is None:
-            collector = ParameterCollector(Dialect.SQLITE)
-
+    def to_sql(self, collector: ParameterCollector) -> str:
         operand_sql = self._operand_to_sql(self.operand, collector)
         return f"({self.operator} {operand_sql})"
 
@@ -97,11 +90,7 @@ class FunctionExpression(SQLExpression):
         self.function_name = function_name
         self.args = args
 
-    def to_sql(self, collector: ParameterCollector | None = None) -> str:
-        # TODO: ensure that this handles correctly when collector is None (below is temporary)
-        if collector is None:
-            collector = ParameterCollector(Dialect.SQLITE)
-
+    def to_sql(self, collector: ParameterCollector) -> str:
         if not self.args:
             return f"{self.function_name}()"
 

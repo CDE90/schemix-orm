@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import datetime
 from abc import ABC, abstractmethod
-from typing import Any, Self, TypeGuard
+from typing import Any, Self
 
 from schemix.dialects import Dialect, DialectNotSupportedError
-from schemix.query import BinaryExpression, FunctionExpression, SQLExpression
+from schemix.query import BinaryExpression, FunctionExpression
 from schemix.table import BaseTable
 
 
@@ -74,10 +74,10 @@ class ColumnType[T](ABC):
 
     # Note: comparison operators and some others are not defined for all column types
 
-    def is_null(self) -> SQLExpression:
+    def is_null(self):
         return BinaryExpression(self, "IS", None)
 
-    def is_not_null(self) -> SQLExpression:
+    def is_not_null(self):
         return BinaryExpression(self, "IS NOT", None)
 
 
@@ -117,7 +117,7 @@ class NumericOperatorMixin:
 
 
 class StringOperatorMixin:
-    def __concat__(self, other: Any):
+    def concat(self, other: Any):
         return BinaryExpression(self, "||", other)
 
     def like(self, other: Any):
@@ -406,12 +406,12 @@ class Timestamp(
         elif dialect == Dialect.POSTGRESQL:
             if self.precision is not None:
                 if self.with_timezone:
-                    return f"TIMESTAMPZ({self.precision})"
+                    return f"TIMESTAMP({self.precision}) WITH TIME ZONE"
                 else:
                     return f"TIMESTAMP({self.precision})"
             else:
                 if self.with_timezone:
-                    return "TIMESTAMPZ"
+                    return "TIMESTAMP WITH TIME ZONE"
                 else:
                     return "TIMESTAMP"
 

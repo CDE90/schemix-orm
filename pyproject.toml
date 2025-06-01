@@ -72,3 +72,4 @@ check_untyped_defs = true
 disallow_untyped_defs = false
 # This helps with async function analysis
 warn_return_any = true
+exclude = ["packages/schemix-mypy/.*"]

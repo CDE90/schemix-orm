@@ -53,7 +53,7 @@ class JoinClause:
 class SelectConfig:
     where: SQLExpression | None = None
     having: SQLExpression | None = None
-    group_by: list[type[ColumnType]] | None = None
+    group_by: list[ColumnType] | None = None
     order_by: tuple[SQLExpression | ColumnType, ...] | None = None
     limit: int | None = None
     offset: int | None = None
@@ -124,7 +124,7 @@ class SelectBase[CType]:
         self.config.having = expression
         return self
 
-    def group_by(self, columns: list[type[ColumnType]]) -> Self:
+    def group_by(self, columns: list[ColumnType]) -> Self:
         self.config.group_by = columns
         return self
 
@@ -175,8 +175,10 @@ class SelectBase[CType]:
 
         # Add GROUP BY clause
         if self.config.group_by is not None:
-            # TODO: handle both columns being passed as well as sql expressions
-            pass
+            group_by_columns = ", ".join(
+                [column._get_qualified_name() for column in self.config.group_by]
+            )
+            sql += f" GROUP BY {group_by_columns}"
 
         # Add HAVING clause
         if self.config.having is not None:
@@ -184,8 +186,13 @@ class SelectBase[CType]:
 
         # Add ORDER BY clause
         if self.config.order_by is not None:
-            # TODO: handle both columns being passed as well as sql expressions
-            pass
+            order_by_clauses = []
+            for expr in self.config.order_by:
+                if isinstance(expr, ColumnType):
+                    order_by_clauses.append(expr._get_qualified_name())
+                else:
+                    order_by_clauses.append(expr.to_sql(collector))
+            sql += f" ORDER BY {', '.join(order_by_clauses)}"
 
         # Add LIMIT clause
         if self.config.limit is not None:
