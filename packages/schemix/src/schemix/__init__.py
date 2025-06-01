@@ -29,7 +29,3 @@ __all__ = [
     "generate_column_sql",
     "generate_foreign_key_constraint_sql",
 ]
-
-
-def hello() -> str:
-    return "Hello from schemix!"

@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 
-OnDeleteUpdateAction = Literal["cascade", "restrict", "set null", "set default", "no action"]
+OnDeleteUpdateAction = Literal["CASCADE", "RESTRICT", "SET NULL", "SET DEFAULT", "NO ACTION"]
 
 
 class ColumnType[T](ABC):
@@ -99,8 +99,8 @@ class ColumnType[T](ABC):
             on_update: Action to take when referenced row is updated
         """
         self._references = column
-        self._on_delete = on_delete.upper() if on_delete else None
-        self._on_update = on_update.upper() if on_update else None
+        self._on_delete = on_delete if on_delete else None
+        self._on_update = on_update if on_update else None
         return self
 
     # Comparison Operators
