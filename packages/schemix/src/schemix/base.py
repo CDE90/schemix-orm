@@ -15,6 +15,8 @@ __all__ = [
     "OnDeleteUpdateAction",
     "OrderedOperatorMixin",
     "NumericOperatorMixin",
+    "PostgreSQLNumericOperatorMixin",
+    "SQLiteNumericOperatorMixin",
     "StringOperatorMixin",
     "CountOperatorMixin",
     "MinMaxOperatorMixin",
@@ -150,6 +152,8 @@ class OrderedOperatorMixin:
 
 
 class NumericOperatorMixin:
+    """Base numeric operators shared across all dialects."""
+
     def __add__(self, other: Any):
         return BinaryExpression(self, "+", other)
 
@@ -165,8 +169,19 @@ class NumericOperatorMixin:
     def __mod__(self, other: Any):
         return BinaryExpression(self, "%", other)
 
+
+class PostgreSQLNumericOperatorMixin(NumericOperatorMixin):
+    """PostgreSQL-specific numeric operators."""
+
     def __pow__(self, other: Any):
         return BinaryExpression(self, "^", other)
+
+
+class SQLiteNumericOperatorMixin(NumericOperatorMixin):
+    """SQLite-specific numeric operators."""
+
+    def __pow__(self, other: Any):
+        return FunctionExpression("power", self, other)
 
 
 class StringOperatorMixin:

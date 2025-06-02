@@ -12,9 +12,9 @@ from schemix.base import (
     JSONSerializationMixin,
     MinMaxOperatorMixin,
     NumericAggregateOperatorMixin,
-    NumericOperatorMixin,
     OrderedOperatorMixin,
     PassthroughSerializationMixin,
+    SQLiteNumericOperatorMixin,
     StringOperatorMixin,
     TimeSerializationMixin,
     TimestampSerializationMixin,
@@ -35,7 +35,7 @@ __all__ = [
 
 class Integer(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    SQLiteNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -48,7 +48,7 @@ class Integer(
 
 class Real(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    SQLiteNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -78,7 +78,7 @@ class Blob(PassthroughSerializationMixin, CountOperatorMixin, ColumnType[bytes])
 
 class Numeric(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    SQLiteNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -86,6 +86,9 @@ class Numeric(
     ColumnType[float],
 ):
     def __init__(self, col_name: str, *, precision: int, scale: int = 0) -> None:
+        if precision <= 0 or scale < 0 or scale >= precision:
+            raise ValueError("Precision must be > 0 and scale must be >= 0 and < precision.")
+
         super().__init__(col_name, precision=precision, scale=scale)
 
     def get_sql_type(self) -> str:
@@ -127,6 +130,6 @@ class Timestamp(
         return "TEXT"  # SQLite stores timestamps as TEXT
 
 
-class JSON(JSONSerializationMixin, CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]):
+class JSON(JSONSerializationMixin, CountOperatorMixin, ColumnType[Any]):
     def get_sql_type(self) -> str:
         return "TEXT"  # SQLite stores JSON as TEXT

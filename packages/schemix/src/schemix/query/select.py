@@ -164,12 +164,9 @@ class SelectBase[CType]:
                 join_table_name = join.table.get_table_name()
                 join_type = join.join_type.upper()
 
-                if join_type == "CROSS":
-                    sql += f" {join_type} JOIN {join_table_name}"
-                else:
-                    sql += f" {join_type} JOIN {join_table_name}"
-                    if join.on is not None:
-                        sql += f" ON {join.on.to_sql(dialect, collector)}"
+                sql += f" {join_type} JOIN {join_table_name}"
+                if join_type != "CROSS" and join.on is not None:
+                    sql += f" ON {join.on.to_sql(dialect, collector)}"
 
         # Add WHERE clause
         if self.config.where is not None:

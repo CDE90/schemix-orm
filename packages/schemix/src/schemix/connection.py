@@ -45,7 +45,7 @@ class AsyncConnection(ABC):
 
     @abstractmethod
     async def executemany(self, query: str, params: Sequence[Sequence[Any]]) -> None:
-        """Execute a query and return the results."""
+        """Execute a batch query without returning results."""
         ...
 
 
@@ -75,7 +75,7 @@ class SQLiteConnection(AsyncConnection):
             # Convert rows to a list of dictionaries
             results = []
             for row in rows:
-                row_dict = dict(zip(column_names, row, strict=False))
+                row_dict = dict(zip(column_names, row, strict=True))
                 results.append(row_dict)
 
             await cursor.close()

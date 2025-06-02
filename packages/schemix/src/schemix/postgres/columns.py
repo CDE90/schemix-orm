@@ -10,9 +10,9 @@ from schemix.base import (
     CountOperatorMixin,
     MinMaxOperatorMixin,
     NumericAggregateOperatorMixin,
-    NumericOperatorMixin,
     OrderedOperatorMixin,
     PassthroughSerializationMixin,
+    PostgreSQLNumericOperatorMixin,
     StringOperatorMixin,
 )
 from schemix.query import BinaryExpression
@@ -50,7 +50,7 @@ class PostgreSQLStringOperatorMixin(StringOperatorMixin):
 
 class Integer(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    PostgreSQLNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -63,7 +63,7 @@ class Integer(
 
 class SmallInt(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    PostgreSQLNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -76,7 +76,7 @@ class SmallInt(
 
 class BigInt(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    PostgreSQLNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -104,7 +104,7 @@ class BigSerial(BigInt):
 
 class Numeric(
     PassthroughSerializationMixin,
-    NumericOperatorMixin,
+    PostgreSQLNumericOperatorMixin,
     OrderedOperatorMixin,
     CountOperatorMixin,
     MinMaxOperatorMixin,
@@ -112,6 +112,9 @@ class Numeric(
     ColumnType[float],
 ):
     def __init__(self, col_name: str, *, precision: int, scale: int = 0) -> None:
+        if precision <= 0 or scale < 0 or scale >= precision:
+            raise ValueError("Precision must be > 0 and scale must be >= 0 and < precision")
+
         super().__init__(col_name, precision=precision, scale=scale)
 
     def get_sql_type(self) -> str:
@@ -218,7 +221,7 @@ class Timestamp(
 
 
 class JSON(
-    PassthroughSerializationMixin, CountOperatorMixin, ColumnType[dict[str, Any] | list[Any]]
+    PassthroughSerializationMixin, CountOperatorMixin, ColumnType[Any]
 ):
     def get_sql_type(self) -> str:
         return "JSON"
