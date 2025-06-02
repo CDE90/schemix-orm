@@ -1,11 +1,13 @@
 import asyncio
 import json
+import logging
 
 import aiosqlite
 
 from schemix.database import Database
 from schemix.dialects import Dialect
 from schemix.helpers import create_sqlite_connection
+from schemix.logging import configure_logging
 from schemix.schema import generate_create_table_sql
 from schemix.sqlite import JSON, Integer, Text
 from schemix.table import BaseTable
@@ -117,6 +119,9 @@ async def seed_data(sqlite_conn: aiosqlite.Connection) -> None:
 
 
 async def main() -> None:
+    # Configure Schemix logging to DEBUG level for console output
+    configure_logging(level=logging.DEBUG)
+
     # Option 1: Using helper function (recommended)
     connection = await create_sqlite_connection(":memory:")
 

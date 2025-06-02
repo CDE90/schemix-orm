@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
@@ -7,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar
 from schemix.base import ColumnType
 from schemix.dialects import ParameterCollector
 from schemix.exceptions import QueryError
+from schemix.logging import get_logger, log_performance, log_sql_query
 from schemix.query import SQLExpression
 from schemix.table import BaseTable
 
@@ -78,6 +80,7 @@ class SelectBase[CType]:
         self.columns = columns
         self.table = table
         self.database = database
+        self._logger = get_logger("query.select")
 
         self.config = SelectConfig()
 
@@ -201,7 +204,9 @@ class SelectBase[CType]:
         if self.config.offset is not None:
             sql += f" OFFSET {self.config.offset}"
 
-        return sql, tuple(collector.parameters)
+        params_tuple = tuple(collector.parameters)
+        log_sql_query(self._logger, sql, list(params_tuple))
+        return sql, params_tuple
 
     def _deserialize_row(self, row: dict[str, Any]) -> CType:
         """Deserialize a database row using column-level deserialization."""
@@ -215,19 +220,34 @@ class SelectBase[CType]:
                     # For expressions, keep as-is
                     deserialized_row[alias] = row[alias]
             else:
+                self._logger.warning("Expected column '%s' not found in query result", alias)
                 deserialized_row[alias] = None
         return deserialized_row  # type: ignore[return-value]
 
     async def execute(self) -> list[CType]:
         """Execute the query and return the results."""
+        start_time = time.perf_counter()
+
         try:
             sql, params = self.get_sql()
+            self._logger.debug("Executing SELECT query on table '%s'", self.table.get_table_name())
+
             raw_results = await self.database.connection.execute(sql, params)
             if not raw_results:
+                self._logger.debug("Query returned no results")
                 return []
 
             # Deserialize each row using column-level deserialization
             results = [self._deserialize_row(row) for row in raw_results]
+
+            duration = time.perf_counter() - start_time
+            log_performance(
+                self._logger,
+                f"SELECT query execution and deserialization (table: {self.table.get_table_name()}, rows: {len(results)})",
+                duration,
+            )
+
             return results  # type: ignore[return-value]
         except Exception as e:
+            self._logger.error("Failed to execute SELECT query: %s", str(e))
             raise QueryError(f"Failed to execute select query: {e}") from e

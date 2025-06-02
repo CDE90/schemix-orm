@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from schemix.dialects import Dialect
+from schemix.logging import get_logger
 
 if TYPE_CHECKING:
     from schemix.base import ColumnType
@@ -65,8 +66,13 @@ def generate_foreign_key_constraint_sql(column: ColumnType, dialect: Dialect) ->
 
 def generate_create_table_sql(table_cls: type[BaseTable], dialect: Dialect) -> str:
     """Generate CREATE TABLE SQL for a table class."""
+    logger = get_logger("schema")
     table_name = table_cls.get_table_name()
     columns = table_cls.get_columns()
+
+    logger.debug(
+        "Generating CREATE TABLE SQL for table '%s' with dialect '%s'", table_name, dialect
+    )
 
     # Generate column definitions
     column_definitions = []
@@ -85,5 +91,13 @@ def generate_create_table_sql(table_cls: type[BaseTable], dialect: Dialect) -> s
     sql = f"CREATE TABLE {table_name} (\n"
     sql += ",\n".join(f"  {element}" for element in table_elements)
     sql += "\n)"
+
+    logger.info(
+        "Generated CREATE TABLE SQL for table '%s' (%d columns, %d foreign keys)",
+        table_name,
+        len(column_definitions),
+        len(foreign_key_constraints),
+    )
+    logger.debug("Generated SQL: %s", sql)
 
     return sql
