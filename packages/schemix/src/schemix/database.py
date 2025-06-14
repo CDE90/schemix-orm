@@ -6,6 +6,7 @@ from typing import TypeVar
 from schemix.base import ColumnType
 from schemix.connection import AsyncConnection
 from schemix.query import SQLExpression
+from schemix.query.insert import InsertBuilder
 from schemix.query.select import SelectBuilder
 from schemix.table import BaseTable
 
@@ -40,3 +41,17 @@ class Database:
             >>> query = db.select({"user_id": User.id, "name": User.name})
         """
         return SelectBuilder(columns, self)
+
+    def insert(self, table: type[BaseTable]) -> InsertBuilder:
+        """Create an INSERT query builder.
+
+        Args:
+            table: Table class to insert into
+
+        Returns:
+            InsertBuilder instance for chaining query operations
+
+        Example:
+            >>> await db.insert(User).values({"name": "John", "email": "john@example.com"}).execute()
+        """
+        return InsertBuilder(table, self)

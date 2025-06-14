@@ -186,6 +186,118 @@ async def main() -> None:
     for row in join_results:
         print(row)
 
+    # Test INSERT operations
+    print("\n--- Testing INSERT operations ---")
+
+    # Insert a new user
+    insert_result = (
+        await db.insert(Users)
+        .values(
+            {
+                "name": "Eve",
+                "email": "eve@example.com",
+                "age": 28,
+                "is_active": 1,
+                "metadata": {"hobbies": ["photography", "hiking"]},
+                "bio": "Adventure enthusiast",
+            }
+        )
+        .execute()
+    )
+
+    print(f"INSERT result: {insert_result}")
+
+    # Insert a new post
+    post_insert_result = (
+        await db.insert(Posts)
+        .values(
+            {
+                "title": "Photography Tips",
+                "content": "Eve shares her best photography tips for beginners.",
+                "author_id": 5,  # Assuming Eve will have ID 5
+            }
+        )
+        .execute()
+    )
+
+    print(f"Post INSERT result: {post_insert_result}")
+
+    # Verify the inserts worked by querying the new data
+    verification_query = (
+        db.select({"name": Users.name, "email": Users.email, "post_title": Posts.title})
+        .from_(Users)
+        .left_join(Posts, Users.id == Posts.author_id)
+        .where(Users.name == "Eve")
+    )
+
+    verification_results = await verification_query.execute()
+    print("\nVerification query results:")
+    for row in verification_results:
+        print(row)
+
+    # Test bulk INSERT operations
+    print("\n--- Testing bulk INSERT operations ---")
+
+    # Insert multiple users at once
+    bulk_users = [
+        {
+            "name": "Frank",
+            "email": "frank@example.com",
+            "age": 32,
+            "is_active": 1,
+            "metadata": {"hobbies": ["cooking"]},
+            "bio": "Chef enthusiast",
+        },
+        {
+            "name": "Grace",
+            "email": "grace@example.com",
+            "age": 29,
+            "is_active": 1,
+            "metadata": {"hobbies": ["dancing", "music"]},
+            "bio": "Dance instructor",
+        },
+        {
+            "name": "Henry",
+            "email": "henry@example.com",
+            "age": 45,
+            "is_active": 0,
+            "metadata": None,
+            "bio": None,
+        },
+    ]
+
+    bulk_insert_result = await db.insert(Users).values(bulk_users).execute()
+    print(f"Bulk INSERT result: {bulk_insert_result}")
+
+    # Insert multiple posts at once
+    bulk_posts = [
+        {
+            "title": "Cooking Tips",
+            "content": "Frank shares his favorite cooking techniques.",
+            "author_id": 6,  # Frank
+        },
+        {
+            "title": "Dance Lessons",
+            "content": "Grace offers beginner dance lessons.",
+            "author_id": 7,  # Grace
+        },
+    ]
+
+    bulk_posts_result = await db.insert(Posts).values(bulk_posts).execute()
+    print(f"Bulk posts INSERT result: {bulk_posts_result}")
+
+    # Verify the bulk inserts
+    alt_verification_query = (
+        db.select({"name": Users.name, "email": Users.email})
+        .from_(Users)
+        .where((Users.name == "Frank") | (Users.name == "Grace") | (Users.name == "Henry"))
+        .order_by(Users.name)
+    )
+    alt_verification_results = await alt_verification_query.execute()
+    print("\nBulk insert verification (alternative):")
+    for row in alt_verification_results:
+        print(row)
+
     await sqlite_conn.close()
 
 

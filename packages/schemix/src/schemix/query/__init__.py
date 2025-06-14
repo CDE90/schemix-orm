@@ -7,6 +7,8 @@ from typing import Any
 from schemix.dialects import Dialect, ParameterCollector
 from schemix.utils import _is_column_type
 
+__all__ = ["SQLExpression", "BinaryExpression", "UnaryExpression", "FunctionExpression"]
+
 
 class SQLExpression(ABC):
     """An abstract class representing an SQL expression."""

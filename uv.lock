@@ -5,7 +5,6 @@ requires-python = ">=3.13"
 [manifest]
 members = [
     "schemix",
-    "schemix-mypy",
     "schemix-orm",
 ]
 
@@ -117,17 +116,6 @@ wheels = [
 name = "schemix"
 version = "0.1.0a0"
 source = { editable = "packages/schemix" }
-
-[[package]]
-name = "schemix-mypy"
-version = "0.1.0a0"
-source = { editable = "packages/schemix-mypy" }
-dependencies = [
-    { name = "mypy" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "mypy", specifier = ">=1.16.0" }]
 
 [[package]]
 name = "schemix-orm"
